@@ -1,0 +1,4 @@
+#!/Users/phillipoliveria/PycharmProjects/web_blog/venv/bin/python
+
+from pdb_clone import attach
+attach.main()

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container page-form">
+<!-- this div HAS TWO CLASSES - it is used so we can modify this section's style in our css-->
+    <form id="login-form" action="/blogs/new" method="post">
+        <div class="heading">
+            <h2>Create a new blog</h2>
+        </div>
+        <div class="form-group">
+            <label for="title">Blog title:</label>
+            <input class="form-control" type="text" id="title" name="title" placeholder="Enter a title for your blog">
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <!-- the ID in the label corresponds with the id in the input line -->
+            <textarea class="form-control" id="description" name="description" cols="40" rows="5" placeholder="Enter a description for your blog"></textarea>
+        </div>
+        <div class="form-button">
+            <button type="submit" id="submit-button" class="btn btn-outline-light btn-lg btn-block">Create blog</button>
+        </div>
+    </form>
+</div>
+{% if msg is defined %}
+    <p><center>{{ msg }}</center></p>
+{% endif %}
+{% endblock %}
