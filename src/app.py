@@ -168,7 +168,7 @@ def search():
     if __name__ == '__main__':
         search_term = request.args.get('search')
     # Get the search term
-    search_list = (re.sub(r'\W+', '', search_term)).split()
+    search_list = search_term.split()
     # Filter out non-alphanumeric characters and divide it into a list by whitespace
     results = []
     for key in ["title", "content"]:
