@@ -24,6 +24,6 @@
     <p><b><a href="/login">Have an account?</a></b></p>
 </div>
 {% if msg is defined %}
-    <p><center>{{ msg }}</center></p>
+    <p><center>{{ msg|safe }}</center></p>
 {% endif %}
 {% endblock %}

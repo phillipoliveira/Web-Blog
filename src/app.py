@@ -12,7 +12,11 @@ app.secret_key = "jose"
 @app.route('/')
 # Returns the home page
 def home_template():
-    return render_template('home.html')
+    if session['email'] is None:
+        return render_template('home.html')
+    else:
+        return make_response(user_blogs())
+
 
 @app.route('/login')
 # Returns the login page
@@ -28,36 +32,53 @@ def register_template():
 def initialize_database():
     Database.initialize()
 
-@app.route('/auth/login', methods=['POST'])
+@app.route('/auth/login', methods=['POST', 'GET'])
 # Login endpoint - this endpoint only accepts POST requests
 def login_user():
-    email = request.form['email']
-    password = request.form['password']
-    hash_pass = hashlib.sha256(password.encode()).hexdigest()
-    # this will get the info submitted into the base.html page.
-    if User.login_valid(email, hash_pass):
-        User.login(email)
-        return make_response(user_blogs())
+    if request.method == 'GET':
+        if session['email'] is None:
+            return make_response(home_template())
+        else:
+            return make_response(user_blogs())
     else:
-        session['email'] = None
-        return render_template('login.html')
+        email = request.form['email']
+        password = request.form['password']
+        hash_pass = hashlib.sha256(password.encode()).hexdigest()
+        # this will get the info submitted into the base.html page.
+        if User.login_valid(email, hash_pass):
+            User.login(email)
+            return make_response(user_blogs())
+        else:
+            session['email'] = None
+            return render_template('login.html')
 
 
-@app.route('/auth/register', methods=['POST'])
+@app.route('/auth/register', methods=['POST', 'GET'])
 # Register endpoint:
 def register_user():
-    email = request.form['email']
-    password = request.form['password']
-    if not all([(re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$", email)),(len(password) > 7)]):
-        msg = "All users must have a valid email,\nand a password with a minimum of 8 characters."
-        session['email'] = None
-        return render_template('register.html', msg=msg)
+    if request.method == 'GET':
+        if session['email'] is None:
+            return make_response(home_template())
+        else:
+            return make_response(user_blogs())
     else:
-        hash_pass = hashlib.sha256(password.encode()).hexdigest()
-        # Get the user's credentials
-        User.register(email, hash_pass)
-        # Register the user using the method in the User object. This sets the session email, and saves the user to Mongo.
-        return make_response(user_blogs())
+        email = request.form['email']
+        password = request.form['password']
+        if not all([(re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$", email)),(len(password) > 7)]):
+            msg = "All users must have a valid email,\nand a password with a minimum of 8 characters."
+            session['email'] = None
+            return render_template('register.html', msg=msg)
+        else:
+            if Database.find_one("users", {"email": email}) is None:
+                hash_pass = hashlib.sha256(password.encode()).hexdigest()
+                # Get the user's credentials
+                User.register(email, hash_pass)
+                # Register the user using the method in the User object. This sets the session email, and saves the user to Mongo.
+                return make_response(user_blogs())
+            else:
+                msg = """This email address is already in use. <a href="/login">Already have an account?</a>"""
+                return render_template('register.html', msg=msg)
+
 
 
 @app.route('/blogs/<string:user_id>')
@@ -138,6 +159,29 @@ def create_new_post(blog_id):
             new_post.save_to_mongo()
             return make_response(blog_posts(blog_id))
             # make_response is a Flask function that allows us to redirect the user to another function.
+
+
+@app.route("/search")
+def search():
+    user = User.get_by_email(session['email'])
+    blogs = user.get_blogs()
+    if __name__ == '__main__':
+        search_term = request.args.get('search')
+    search_list = search_term.split()
+    results = []
+    for key in ["title", "content"]:
+        for search_item in search_list:
+            for entry in Database.find("posts", {"author": user.email, key: {"$regex": u"{}".format(search_item)}}):
+                if entry not in results:
+                    results.append(entry)
+    for dct in results:
+        for key in dct.keys():
+            for search_item in search_list:
+                if any([(key == 'content'), (key == 'title')]):
+                    found_items = re.findall(search_item, dct[key], flags=re.IGNORECASE)
+                    for item in found_items:
+                        dct[key] = re.sub(item, "<mark>{}</mark>".format(item), dct[key])
+    return render_template('search.html', results=results, blogs=blogs)
 
 
 if __name__ == '__main__':
