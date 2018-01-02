@@ -167,20 +167,27 @@ def search():
     blogs = user.get_blogs()
     if __name__ == '__main__':
         search_term = request.args.get('search')
+    # Get the search term
     search_list = (re.sub(r'\W+', '', search_term)).split()
+    # Filter out non-alphanumeric characters and divide it into a list by whitespace
     results = []
     for key in ["title", "content"]:
         for search_item in search_list:
             for entry in Database.find("posts", {"author": user.email, key: {"$regex": u"{}".format(search_item)}}):
                 if entry not in results:
                     results.append(entry)
+    # Append each search term to the result list, if it matches anything in 'title' or 'content' fields,
+    # and the user is the author.
     for dct in results:
         for key in dct.keys():
             for search_item in search_list:
                 if any([(key == 'content'), (key == 'title')]):
                     found_items = re.findall(search_item, dct[key], flags=re.IGNORECASE)
+    # Grab the matching items directly from the database, so that we can keep the their capitalization,
+    # and add them to a new list.
                     for item in found_items:
                         dct[key] = re.sub(item, "<mark>{}</mark>".format(item), dct[key])
+    # Add highlighting around the matching items so that they appear highlighted in the results.
     return render_template('search.html', results=results, blogs=blogs)
 
 
