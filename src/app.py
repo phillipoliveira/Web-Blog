@@ -167,7 +167,7 @@ def search():
     blogs = user.get_blogs()
     if __name__ == '__main__':
         search_term = request.args.get('search')
-    search_list = search_term.split()
+    search_list = (re.sub(r'\W+', '', search_term)).split()
     results = []
     for key in ["title", "content"]:
         for search_item in search_list:
