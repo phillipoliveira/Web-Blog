@@ -166,8 +166,7 @@ def create_new_post(blog_id):
 def search():
     user = User.get_by_email(session['email'])
     blogs = user.get_blogs()
-    if __name__ == '__main__':
-        search_term = request.args.get('search')
+    search_term = request.args.get('search')
     # Get the search term
     printable = set(string.printable)
     search_term = ''.join(filter(lambda x: x in printable, search_term))
