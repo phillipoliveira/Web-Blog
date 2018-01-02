@@ -5,6 +5,7 @@ from src.models.post import Post
 from src.models.user import User
 import hashlib
 import re
+import string
 
 app = Flask(__name__)
 app.secret_key = "jose"
@@ -168,8 +169,10 @@ def search():
     if __name__ == '__main__':
         search_term = request.args.get('search')
     # Get the search term
+    printable = set(string.printable)
+    search_term = ''.join(filter(lambda x: x in printable, search_term))
     search_list = search_term.split()
-    # Filter out non-alphanumeric characters and divide it into a list by whitespace
+    # Filter out non-ascii characters and divide it into a list by whitespace
     results = []
     for key in ["title", "content"]:
         for search_item in search_list:
