@@ -178,13 +178,12 @@ def search():
     search_list = search_term.split()
     # Filter out non-ascii characters and divide it into a list by whitespace
     results = []
-    for key in ["title", "content"]:
-        for search_item in search_list:
-            for entry in Database.find("posts", {
-                "$or": [{"title": {'$regex': '{}'.format(search_item), '$options': 'i'}, "author": user.email},
+    for search_item in search_list:
+        for entry in Database.find("posts", {
+            "$or": [{"title": {'$regex': '{}'.format(search_item), '$options': 'i'}, "author": user.email},
                         {"content": {'$regex': '{}'.format(search_item), '$options': 'i'}, "author": user.email}]}):
-                if entry not in results:
-                    results.append(entry)
+            if entry not in results:
+                results.append(entry)
     # Append each search term to the result list, if it matches anything in 'title' or 'content' fields,
     # and the user is the author.
     for dct in results:
