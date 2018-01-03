@@ -135,6 +135,11 @@ def create_new_blog():
             return make_response(user_blogs(user._id))
             # make_response is a Flask function that allows us to redirect the user to another function.
 
+@app.route('/blogs/edit/<string:blog_id>')
+def edit_blog(blog_id):
+    blog = Blog.from_mongo(blog_id)
+
+
 
 @app.route("/posts/new/<string:blog_id>", methods=['POST', 'GET'])
 def create_new_post(blog_id):
@@ -175,7 +180,9 @@ def search():
     results = []
     for key in ["title", "content"]:
         for search_item in search_list:
-            for entry in Database.find("posts", {"author": user.email, key: {"$regex": u"{}".format(search_item)}}):
+            for entry in Database.find("posts", {
+                "$or": [{"title": {'$regex': '{}'.format(search_item), '$options': 'i'}, "author": user.email},
+                        {"content": {'$regex': '{}'.format(search_item), '$options': 'i'}, "author": user.email}]}):
                 if entry not in results:
                     results.append(entry)
     # Append each search term to the result list, if it matches anything in 'title' or 'content' fields,
